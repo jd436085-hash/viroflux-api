@@ -3,151 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViroFlux API Simulator</title>
+    <title>ViroFlux — Real-Time Pathogen Prediction</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 3Dmol.js for 3D Protein Structure Rendering -->
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap');
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-between">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Header -->
-    <header class="border-b border-gray-800 bg-gray-950/50 backdrop-blur px-6 py-4">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-extrabold tracking-wider bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-                VIROFLUX SIMULATOR
-            </h1>
-            <span class="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-xs font-semibold uppercase tracking-wider">
-                API Connected
-            </span>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-6 py-10 w-full grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- Main Workspace Container -->
+    <div class="container mx-auto px-4 max-w-5xl py-12 flex-grow flex flex-col items-center justify-center">
         
-        <!-- Controls Column -->
-        <div class="bg-gray-950/40 border border-gray-800 p-6 rounded-2xl flex flex-col gap-6">
-            <h2 class="text-xl font-bold border-b border-gray-800 pb-3">Simulation Parameters</h2>
-            
-            <form id="sim-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">API URL</label>
-                    <input type="text" id="api-url" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-teal-400 font-mono focus:outline-none focus:border-teal-500" value="https://viroflux-api.onrender.com">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Time Steps</label>
-                    <input type="number" id="time-steps" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500" value="100">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Initial Infection Rate</label>
-                    <input type="number" id="init-inf" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500" value="0.05">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Transmission Rate</label>
-                    <input type="number" id="trans-rate" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500" value="0.32">
-                </div>
-
-                <button type="button" id="run-btn" class="w-full py-3 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-400 hover:to-blue-500 text-white rounded-lg font-bold tracking-wide shadow-lg shadow-teal-500/10 transition duration-150">
-                    Run Simulation
-                </button>
-            </form>
+        <!-- Logo Header (Exactly matches your design draft) -->
+        <div class="text-center mb-10">
+            <div class="flex items-center justify-center gap-4 mb-2">
+                <!-- SVG Sun/Virus Logo -->
+                <svg class="w-16 h-16 text-rose-500 animate-pulse" viewBox="0 0 100 100" fill="currentColor">
+                    <circle cx="50" cy="50" r="22" class="fill-sky-400/80" />
+                    <!-- Outer tentacles -->
+                    <path d="M50 15 C 45 25, 35 25, 30 18 C 25 10, 20 20, 28 28 C 20 30, 20 40, 15 50 C 25 45, 25 35, 18 30 C 10 25, 20 20, 28 28" fill="none" stroke="#f43f5e" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M50 50 L 50 10 M50 50 L 80 20 M50 50 L 90 50 M50 50 L 80 80 M50 50 L 50 90 M50 50 L 20 80 M50 50 L 10 50 M50 50 L 20 20" stroke="#f43f5e" stroke-width="3" stroke-dasharray="2,2"/>
+                </svg>
+                <h1 class="text-6xl font-extrabold tracking-tight text-rose-500">
+                    VIRO<span class="text-amber-400 font-light">FLUX</span>
+                </h1>
+            </div>
+            <p class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">
+                Real-Time Prediction of Pathogen Evolution
+            </p>
         </div>
 
-        <!-- Chart Visualization Column -->
-        <div class="md:col-span-2 bg-gray-950/40 border border-gray-800 p-6 rounded-2xl flex flex-col justify-between">
-            <h2 class="text-xl font-bold border-b border-gray-800 pb-3">Projection Model</h2>
+        <!-- Inputs Card -->
+        <div class="w-full bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mb-8 transition-all hover:shadow-2xl">
             
-            <!-- Canvas for Chart.js -->
-            <div class="relative h-96 mt-6 flex items-center justify-center">
-                <canvas id="flux-chart"></canvas>
-                <div id="loading-overlay" class="absolute inset-0 bg-gray-950/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center gap-3 hidden">
-                    <div class="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-sm font-semibold text-teal-400 tracking-wider uppercase animate-pulse">Running API Model...</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- API Connection Address -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-server mr-1"></i> API Server URL
+                    </label>
+                    <input type="text" id="api-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-indigo-600 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" value="https://viroflux-api.onrender.com">
                 </div>
+
+                <!-- Variant Dropdown Selection -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-virus mr-1"></i> Quick-Select Variant Preset
+                    </label>
+                    <select id="variant-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                        <option value="wuhan">SARS-CoV-2 Wildtype (Wuhan-Hu-1)</option>
+                        <option value="delta">SARS-CoV-2 Delta Variant (B.1.617.2)</option>
+                        <option value="custom">Custom Sequence Input (Type Below)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Target sequence input field (Matched to your design draft) -->
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    <i class="fa-solid fa-dna mr-1"></i> Amino Acid Target Sequence (1273 AA Spike Glycoprotein)
+                </label>
+                <textarea id="target-sequence" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-mono tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 resize-none" placeholder="Paste amino acid sequence..."></textarea>
+                <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                    <span id="char-count">Length: 0 AA</span>
+                    <span>Required: 1273 AA</span>
+                </div>
+            </div>
+
+            <!-- Continuous Forecast Time Slider -->
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i class="fa-solid fa-clock mr-1"></i> Forecast Horizon (Timeline)
+                    </h3>
+                    <span id="time-display" class="px-3 py-1 bg-rose-500 text-white rounded-full text-xs font-extrabold font-mono">
+                        t = 0.00 (Current)
+                    </span>
+                </div>
+                <input type="range" id="time-slider" min="0.00" max="1.00" step="0.05" value="0.00" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                <div class="flex justify-between text-[10px] text-slate-400 mt-2 font-semibold">
+                    <span>PRESENT (t = 0.0)</span>
+                    <span>6 MONTHS (t = 0.5)</span>
+                    <span>12 MONTHS (t = 1.0)</span>
+                </div>
+            </div>
+
+            <!-- Submit Button (Direct Match to Draft Design) -->
+            <button id="predict-btn" class="w-full py-4 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white rounded-2xl font-bold tracking-widest shadow-lg shadow-rose-500/20 transition-all uppercase flex items-center justify-center gap-2">
+                <i id="btn-icon" class="fa-solid fa-wand-magic-sparkles"></i>
+                <span id="btn-text">Predict Continuous Drift</span>
+            </button>
+        </div>
+
+        <!-- Output Analytics Dashboard (Hidden initially, slides into view) -->
+        <div id="results-card" class="w-full bg-white rounded-3xl shadow-xl border border-slate-100 p-8 hidden animate-fade-in">
+            <h2 class="text-2xl font-extrabold text-slate-800 border-b border-slate-100 pb-4 mb-6">
+                🔬 Evolutionary Forecast Analytics
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Left Details & Mutation List -->
+                <div class="space-y-6">
+                    <!-- Summary Card -->
+                    <div class="bg-rose-50 rounded-2xl p-6 border border-rose-100">
+                        <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">Forecast Summary</h4>
+                        <p id="summary-text" class="text-sm font-medium text-slate-700">
+                            Analyzing trajectory...
+                        </p>
+                    </div>
+
+                    <!-- Mutations Display -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                            Predicted Substitutions
+                        </h3>
+                        <div id="mutation-tags" class="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                            <!-- Populated via script -->
+                        </div>
+                    </div>
+
+                    <!-- Sequence snippet alignment -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            Receptor Binding Domain Alignment Snippet (Pos 480-510)
+                        </h3>
+                        <div class="bg-slate-950 text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 leading-relaxed">
+                            <div>Orig: <span id="align-orig" class="tracking-[0.3em]"></span></div>
+                            <div class="mt-2 text-slate-400">Pred: <span id="align-pred" class="tracking-[0.3em] text-rose-400"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right 3D Visualizer -->
+                <div class="flex flex-col">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                        Interactive 3D Spike Structure (Mutations Highlighted in Red)
+                    </h3>
+                    <div id="pdb-container" class="relative w-full h-80 bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-inner">
+                        <!-- 3Dmol viewer target -->
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-2 text-center">
+                        <i class="fa-solid fa-arrows-spin mr-1"></i> Left-click and drag to rotate. Scroll to zoom.
+                    </span>
+                </div>
+
             </div>
         </div>
 
-    </main>
+    </div>
 
     <!-- Footer -->
-    <footer class="text-center py-6 border-t border-gray-800 text-xs text-gray-500">
-        &copy; 2026 ViroFlux Research Suite • Powered by Render & FastAPI
+    <footer class="text-center py-6 border-t border-slate-100 text-xs text-slate-400 font-semibold bg-white">
+        &copy; 2026 ViroFlux Project • Powered by Neural ODEs & Render
     </footer>
 
-    <!-- Frontend logic -->
+    <!-- Frontend Core Logic -->
     <script>
-        let chartInstance = null;
+        // Pre-loaded 1,273-character amino acid sequence variants (Wildtype and Delta)
+        const WT_SPIKE = "MFVFLVLLPLVSSQCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAIHVSGTNGTKRFDNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYSKHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYLYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSPRRARSVASQSIIAYTMSLGAENSVAYSNNSIAIPTNFTISVTTEILPVSMTKTSVDCTMYICGDSTECSNLLLQYGSFCTQLNRALTGIAVEQDKNTQEVFAQVKQIYKTPPIKDFGGFNFSQILPDPSKPSKRSFIEDLLFNKVTLADAGFIKQYGDCLGDIAARDLICAQKFNGLTVLPPLLTDEMIAQYTSALLAGTITSGWTFGAGAALQIPFAMQMAYRFNGIGVTQNVLYENQKLIANQFNSAIGKIQDSLSSTASALGKLQDVVNQNAQALNTLVKQLSSNFGAISSVLNDILSRLDKVEAEVQIDRLITGRLQSLQTYVTQQLIRAAEIRASANLAATKMSECVLGQSKRVDFCGKGYHLMSFPQSAPHGVVFLHVTYVPAQEKNFTTAPAICHDGKAHFPREGVFVSNGTHWFVTQRNFYEPQIITTDNTFVSGNCDVVIGIVNNTVYDPLQPELDSFKEELDKYFKNHTSPDVDLGDISGINASVVNIQKEIDRLNEVAKNLNESLIDLQELGKYEQYIKWPWYIWLGFIAGLIAIVMVTIMLCCMTSCCSCLKGCCSCGSCCKFDEDDSEPVLKGVKLHYT";
+        const DELTA_SPIKE = "MFVFLVLLPLVSSQCVNLTTRTQLPPAYTNSFTRGVYYPDKVFRSSVLHSTQDLFLPFFSNVTWFHAISGTNGTKRFDNPVLPFNDGVYFASTEKSNIIRGWIFGTTLDSKTQSLLIVNNATNVVIKVCEFQFCNDPFLGVYYHKNNKSWMESEFRVYSSANNCTFEYVSQPFLMDLEGKQGNFKNLREFVFKNIDGYFKIYSKHTPINLVRDLPQGFSALEPLVDLPIGINITRFQTLLALHRSYLTPGDSSSGWTAGAAAYYVGYLQPRTFLLKYNENGTITDAVDCALDPLSETKCTLKSFTVEKGIYQTSNFRVQPTESIVRFPNITNLCPFGEVFNATRFASVYAWNRKRISNCVADYSVLYNSASFSTFKCYGVSPTKLNDLCFTNVYADSFVIRGDEVRQIAPGQTGKIADYNYKLPDDFTGCVIAWNSNNLDSKVGGNYNYRYRLFRKSNLKPFERDISTEIYQAGSTPCNGVEGFNCYFPLQSYGFQPTNGVGYQPYRVVVLSFELLHAPATVCGPKKSTNLVKNKCVNFNFNGLTGTGVLTESNKKFLPFQQFGRDIADTTDAVRDPQTLEILDITPCSFGGVSVITPGTNTSNQVAVLYQDVNCTEVPVAIHADQLTPTWRVYSTGSNVFQTRAGCLIGAEHVNNSYECDIPIGAGICASYQTQTNSRRRARSVASQSIIAYTMSLGAENSVAYSNNSIAIPTNFTISVTTEILPVSMTKTSVDCTMYICGDSTECSNLLLQYGSFCTQLNRALTGIAVEQDKNTQEVFAQVKQIYKTPPIKDFGGFNFSQILPDPSKPSKRSFIEDLLFNKVTLADAGFIKQYGDCLGDIAARDLICAQKFNGLTVLPPLLTDEMIAQYTSALLAGTITSGWTFGAGAALQIPFAMQMAYRFNGIGVTQNVLYENQKLIANQFNSAIGKIQDSLSSTASALGKLQDVVNQNAQALNTLVKQLSSNFGAISSVLNDILSRLDKVEAEVQIDRLITGRLQSLQTYVTQQLIRAAEIRASANLAATKMSECVLGQSKRVDFCGKGYHLMSFPQSAPHGVVFLHVTYVPAQEKNFTTAPAICHDGKAHFPREGVFVSNGTHWFVTQRNFYEPQIITTDNTFVSGNCDVVIGIVNNTVYDPLQPELDSFKEELDKYFKNHTSPDVDLGDISGINASVVNIQKEIDRLNEVAKNLNESLIDLQELGKYEQYIKWPWYIWLGFIAGLIAIVMVTIMLCCMTSCCSCLKGCCSCGSCCKFDEDDSEPVLKGVKLHYT";
 
-        document.getElementById('run-btn').addEventListener('click', async () => {
+        const textInput = document.getElementById('target-sequence');
+        const charCount = document.getElementById('char-count');
+        const variantSelect = document.getElementById('variant-select');
+        const timeSlider = document.getElementById('time-slider');
+        const timeDisplay = document.getElementById('time-display');
+
+        // Automatically load presets on select change
+        variantSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'wuhan') {
+                textInput.value = WT_SPIKE;
+            } else if (e.target.value === 'delta') {
+                textInput.value = DELTA_SPIKE;
+            } else {
+                textInput.value = '';
+            }
+            updateCharCount();
+        });
+
+        // Initialize with Wildtype loaded
+        textInput.value = WT_SPIKE;
+        updateCharCount();
+
+        function updateCharCount() {
+            const len = textInput.value.trim().length;
+            charCount.textContent = `Length: ${len} AA`;
+            if (len === 1273) {
+                charCount.className = "flex justify-between text-[10px] text-emerald-500 mt-1 font-mono font-bold";
+            } else {
+                charCount.className = "flex justify-between text-[10px] text-amber-500 mt-1 font-mono";
+            }
+        }
+
+        textInput.addEventListener('input', updateCharCount);
+
+        timeSlider.addEventListener('input', (e) => {
+            timeDisplay.textContent = `t = ${parseFloat(e.target.value).toFixed(2)}`;
+        });
+
+        // 3D Visualizer Globals
+        let viewer = null;
+
+        function init3DViewer() {
+            const container = document.getElementById('pdb-container');
+            container.innerHTML = ''; // clear
+            viewer = $3Dmol.createViewer("pdb-container", { backgroundColor: '#0f172a' });
+            
+            // Load free SARS-CoV-2 Spike open structural model (from PDB database)
+            $3Dmol.download("pdb:6VXX", viewer, {multimodel: false, frames: true}, function() {
+                viewer.setStyle({}, {cartoon: {color: '#64748b', opacity: 0.8}});
+                viewer.zoomTo();
+                viewer.render();
+            });
+        }
+
+        // Run prediction
+        document.getElementById('predict-btn').addEventListener('click', async () => {
             const apiBase = document.getElementById('api-url').value.replace(/\/$/, '');
-            const steps = parseInt(document.getElementById('time-steps').value);
-            const initInfection = parseFloat(document.getElementById('init-inf').value);
-            const transmission = parseFloat(document.getElementById('trans-rate').value);
+            const sequence = textInput.value.trim().toUpperCase();
+            const horizon = parseFloat(timeSlider.value);
 
-            const overlay = document.getElementById('loading-overlay');
-            overlay.classList.remove('hidden');
+            if (sequence.length !== 1273) {
+                alert(`Error: SARS-CoV-2 Spike Protein must be exactly 1,273 amino acids. Your input sequence is ${sequence.length} characters.`);
+                return;
+            }
+
+            // Spinner styling
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+            btnIcon.className = "fa-solid fa-spinner animate-spin";
+            btnText.textContent = "Integrating Vector Field...";
 
             try {
-                // Adjust payload keys to match your specific FastAPI schema fields if necessary
-                const response = await fetch(`${apiBase}/simulate`, {
+                const response = await fetch(`${apiBase}/predict`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        steps: steps,
-                        initial_infection: initInfection,
-                        transmission_rate: transmission
+                        sequence: sequence,
+                        t_start: 0.0,
+                        t_end: horizon
                     })
                 });
 
-                if (!response.ok) throw new Error('API server returned an error response.');
+                if (!response.ok) {
+                    throw new Error(`Server returned code ${response.status}`);
+                }
 
                 const data = await response.json();
-                renderChart(data.time, data.projection);
+
+                // Show results card
+                document.getElementById('results-card').classList.remove('hidden');
+
+                // Render dynamic text summaries
+                const summaryText = document.getElementById('summary-text');
+                const mutTags = document.getElementById('mutation-tags');
+                mutTags.innerHTML = '';
+
+                if (data.mutation_count === 0) {
+                    summaryText.innerHTML = `ViroFlux projects **absolute trajectory stability** at time-step <span class="font-mono font-bold text-rose-500">t = ${horizon.toFixed(2)}</span>. No structural mutational drift detected.`;
+                    mutTags.innerHTML = `<span class="text-xs text-slate-400 italic">No modifications predicted.</span>`;
+                } else {
+                    summaryText.innerHTML = `Neural ODE integration forecasts <span class="font-bold text-rose-500 font-mono">${data.mutation_count}</span> functional mutations moving to target horizon <span class="font-mono font-bold text-indigo-600">t = ${horizon.toFixed(2)}</span>.`;
+                    
+                    data.mutations.forEach(mut => {
+                        const tag = document.createElement('span');
+                        tag.className = "px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg border border-rose-200/50";
+                        tag.textContent = mut;
+                        mutTags.appendChild(tag);
+                    });
+                }
+
+                // RBD sequence snippet matching (Positions 480 - 510)
+                document.getElementById('align-orig').textContent = sequence.slice(479, 510);
+                document.getElementById('align-pred').textContent = data.predicted_sequence.slice(479, 510);
+
+                // Initialize 3D Protein structures
+                if (!viewer) {
+                    init3DViewer();
+                }
+
+                // Reset visual styles and paint newly forecasted mutations on the 3D model!
+                if (viewer) {
+                    viewer.setStyle({}, {cartoon: {color: '#64748b', opacity: 0.7}});
+                    
+                    // Parse mutations to color residues on the active model
+                    data.mutations.forEach(mut => {
+                        const match = mut.match(/\d+/);
+                        if (match) {
+                            const position = parseInt(match[0]);
+                            viewer.setStyle({resi: position}, {cartoon: {color: '#f43f5e'}, stick: {color: '#f43f5e', radius: 0.5}});
+                        }
+                    });
+                    viewer.render();
+                }
+
+                // Smooth scroll to view analytics
+                document.getElementById('results-card').scrollIntoView({ behavior: 'smooth' });
 
             } catch (err) {
-                alert(`Error connecting to your API: ${err.message}\nMake sure the API URL is correct and has awoken from sleep.`);
+                alert(`Error connecting to your API: ${err.message}\nMake sure your Render service is live and not sleeping.`);
             } finally {
-                overlay.classList.add('hidden');
+                btnIcon.className = "fa-solid fa-wand-magic-sparkles";
+                btnText.textContent = "Predict Continuous Drift";
             }
         });
-
-        function renderChart(labels, values) {
-            const ctx = document.getElementById('flux-chart').getContext('2d');
-            
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Infection Projection Vector',
-                        data: values,
-                        borderColor: '#14b8a6',
-                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#9ca3af', font: { weight: 'bold' } } }
-                    },
-                    scales: {
-                        x: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
-                        y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }
-                    }
-                }
-            });
-        }
     </script>
 </body>
 </html>
