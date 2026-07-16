@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,7 +7,13 @@ import torch.nn as nn
 from torchdiffeq import odeint
 
 app = FastAPI(title="ViroFlux API")
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # This wildcard allows any website to connect
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all standard HTTP methods like GET and POST
+    allow_headers=["*"], # Allows all headers
+)
 # Enable CORS so the GitHub Pages frontend can communicate with this API
 app.add_middleware(
     CORSMiddleware,
